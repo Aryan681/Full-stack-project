@@ -1,0 +1,55 @@
+# ------------------------------
+# Node / Backend
+# ------------------------------
+node_modules/
+dist/
+build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Environment files
+.env
+.env.local
+.env.*.local
+prisma/.env
+prisma/migrations/
+
+# Logs
+logs/
+*.log
+
+# Redis / database dumps
+dump.rdb
+*.rdb
+
+# ------------------------------
+# Frontend / React / Next.js
+# ------------------------------
+.next/
+out/
+.cache/
+coverage/
+*.tsbuildinfo
+
+# Tailwind / PostCSS cache
+*.css.map
+
+# ------------------------------
+# OS / Editor / IDE
+# ------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ------------------------------
+# Misc
+# ------------------------------
+*.swp
+*.tmp
+*.bak

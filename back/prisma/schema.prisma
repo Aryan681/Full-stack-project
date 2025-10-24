@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid()) // Changed to UUID
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  chats     Chat[]
+}
+
+model Document {
+  id        Int      @id @default(autoincrement())
+  filename  String
+  country   String   // Critical for the Country Filter feature
+  createdAt DateTime @default(now())
+  
+  chats     ChatDocument[] 
+}
+
+model Chat {
+  id        Int      @id @default(autoincrement())
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+  userId    String   // Update type to match User.id
+  user      User     @relation(fields: [userId], references: [id])
+  @@index([userId])
+  
+  sources   ChatDocument[]
+}
+
+model ChatDocument {
+  chatId     Int
+  documentId Int
+  
+  chat       Chat     @relation(fields: [chatId], references: [id])
+  document   Document @relation(fields: [documentId], references: [id])
+
+  @@id([chatId, documentId])
+}
