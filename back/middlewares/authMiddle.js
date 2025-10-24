@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
+const redisClient = require('../utils/redis'); 
 
-const authenticate = (req, res, next) => {
+const authenticate = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(401).json({ error: 'No token provided' });
 
@@ -9,6 +10,13 @@ const authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Check Redis cache
+    const cachedToken = await redisClient.get(`auth:${decoded.userId}`);
+    if (!cachedToken || cachedToken !== token) {
+      return res.status(401).json({ error: 'Token expired or invalidated' });
+    }
+
     req.user = decoded;
     next();
   } catch (err) {

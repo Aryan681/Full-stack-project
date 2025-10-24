@@ -2,10 +2,11 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
+const redisClient = require('../utils/redis'); // your redis client
 
 const prisma = new PrismaClient();
 
-// Validation rules
+// Validation rules (unchanged)
 const validateRegister = [
   body('email').isEmail().withMessage('Invalid email'),
   body('password')
@@ -19,16 +20,14 @@ const validateLogin = [
   body('password').exists().withMessage('Password is required'),
 ];
 
-// REGISTER
+// REGISTER (unchanged)
 const register = async (req, res) => {
-  // Validate inputs
   const errors = validationResult(req);
   if (!errors.isEmpty())
     return res.status(400).json({ errors: errors.array() });
 
   const { email, password, name } = req.body;
   try {
-    // Prisma is safe from SQL injection by design
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser)
       return res.status(400).json({ error: 'Email already registered' });
@@ -45,9 +44,8 @@ const register = async (req, res) => {
   }
 };
 
-// LOGIN
+// LOGIN with Redis caching
 const login = async (req, res) => {
-  // Validate inputs
   const errors = validationResult(req);
   if (!errors.isEmpty())
     return res.status(400).json({ errors: errors.array() });
@@ -66,10 +64,31 @@ const login = async (req, res) => {
       { expiresIn: '1h' }
     );
 
+    // Store token in Redis with TTL 1 hour
+    await redisClient.setEx(`auth:${user.id}`, 3600, token);
+
     res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-module.exports = { register, login, validateRegister, validateLogin };
+// LOGOUT
+const logout = async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return res.status(401).json({ error: 'No token provided' });
+
+  const token = authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Delete token from Redis
+    await redisClient.del(`auth:${decoded.userId}`);
+    res.json({ message: 'Logged out successfully' });
+  } catch (err) {
+    res.status(403).json({ error: 'Invalid token' });
+  }
+};
+
+module.exports = { register, login, logout, validateRegister, validateLogin };
