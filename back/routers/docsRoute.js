@@ -1,10 +1,10 @@
-const express = require('express');
-const { uploadPDF } = require('../controllers/docsController');
-const upload = require('../middlewares/upload');
-const authenticate = require('../middlewares/authMiddle');
+import express from 'express';
+import { uploadPDF } from '../controllers/docsController.js';
+import upload from '../middlewares/upload.js';
+import authenticate from '../middlewares/authMiddle.js';
 
 const router = express.Router();
 
 router.post('/upload', authenticate, upload.single('pdf'), uploadPDF);
 
-module.exports = router;
+export default router;

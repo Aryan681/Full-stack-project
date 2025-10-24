@@ -1,13 +1,13 @@
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { body, validationResult } = require('express-validator');
-const redisClient = require('../utils/redis'); // your redis client
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { body, validationResult } from 'express-validator';
+import redisClient from '../utils/redis.js'; // note the .js extension
 
 const prisma = new PrismaClient();
 
-// Validation rules (unchanged)
-const validateRegister = [
+// Validation rules
+export const validateRegister = [
   body('email').isEmail().withMessage('Invalid email'),
   body('password')
     .isLength({ min: 6 })
@@ -15,13 +15,13 @@ const validateRegister = [
   body('name').optional().isString(),
 ];
 
-const validateLogin = [
+export const validateLogin = [
   body('email').isEmail().withMessage('Invalid email'),
   body('password').exists().withMessage('Password is required'),
 ];
 
-// REGISTER (unchanged)
-const register = async (req, res) => {
+// REGISTER
+export const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty())
     return res.status(400).json({ errors: errors.array() });
@@ -44,8 +44,8 @@ const register = async (req, res) => {
   }
 };
 
-// LOGIN with Redis caching
-const login = async (req, res) => {
+// LOGIN
+export const login = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty())
     return res.status(400).json({ errors: errors.array() });
@@ -74,7 +74,7 @@ const login = async (req, res) => {
 };
 
 // LOGOUT
-const logout = async (req, res) => {
+export const logout = async (req, res) => {
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(401).json({ error: 'No token provided' });
 
@@ -90,5 +90,3 @@ const logout = async (req, res) => {
     res.status(403).json({ error: 'Invalid token' });
   }
 };
-
-module.exports = { register, login, logout, validateRegister, validateLogin };

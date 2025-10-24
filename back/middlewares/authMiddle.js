@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const redisClient = require('../utils/redis'); 
+import jwt from 'jsonwebtoken';
+import redisClient from '../utils/redis.js'; // Add .js extension
 
 const authenticate = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -24,4 +24,4 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-module.exports = authenticate;
+export default authenticate;

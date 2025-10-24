@@ -1,15 +1,14 @@
-const rateLimit = require('express-rate-limit');
-const RedisStore = require('rate-limit-redis').default;
-const redisClient = require('../utils/redis');
-const { ipKeyGenerator } = require('express-rate-limit');
+import rateLimit from 'express-rate-limit';
+import RedisStore from 'rate-limit-redis';
+import redisClient from '../utils/redis.js';
+import { ipKeyGenerator } from 'express-rate-limit';
 
 const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
+  windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-   
     return req.body.email || ipKeyGenerator(req);
   },
   handler: (req, res) => {
@@ -20,4 +19,4 @@ const authRateLimiter = rateLimit({
   }),
 });
 
-module.exports = authRateLimiter;
+export default authRateLimiter;
