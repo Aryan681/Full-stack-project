@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid()) // UUID for unique user IDs
+  id        String   @id @default(uuid())
   email     String   @unique
   password  String
   name      String?
@@ -20,11 +20,11 @@ model User {
 model Document {
   id        Int      @id @default(autoincrement())
   filename  String
-  country   String   // Critical for the Country Filter feature
+  country   String
   createdAt DateTime @default(now())
-  
-  chats     ChatDocument[]
-  chunks    DocumentChunk[]  // Relation to store PDF chunks
+
+  chats     Chat[]
+  chunks    DocumentChunk[]
 }
 
 model DocumentChunk {
@@ -38,23 +38,15 @@ model DocumentChunk {
 }
 
 model Chat {
-  id        Int      @id @default(autoincrement())
-  question  String
-  answer    String
-  createdAt DateTime @default(now())
-  userId    String   // Matches User.id UUID
-  user      User     @relation(fields: [userId], references: [id])
-  @@index([userId])
-  
-  sources   ChatDocument[]
-}
-
-model ChatDocument {
-  chatId     Int
+  id         Int      @id @default(autoincrement())
+  question   String
+  answer     String
+  createdAt  DateTime @default(now())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
   documentId Int
-  
-  chat       Chat     @relation(fields: [chatId], references: [id])
   document   Document @relation(fields: [documentId], references: [id])
 
-  @@id([chatId, documentId])
+  @@index([userId])
+  @@index([documentId])
 }
