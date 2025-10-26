@@ -164,22 +164,3 @@ npm run dev
 
 The client will typically run on `http://localhost:5173`.
 
----
-
-## 💻 Assignment Deliverables
-
-* Publicly accessible app URL
-* GitHub repository link
-* Short demo video (2-3 minutes)
-* Optional: notes explaining Vector Database setup
-
----
-
-## ✅ Evaluation Criteria
-
-* Accuracy and relevance of AI responses
-* Code structure and clarity
-* User interface and experience
-* Deployment readiness
-* Creativity and unique improvements
-
