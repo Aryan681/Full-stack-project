@@ -51,10 +51,11 @@ async function generateEmbedding(text) {
   return result.embedding.values;
 }
 
-// Chat handler
+// 🧠 Chat handler – handles chatting with a document
 export const chatHandler = async (req, res) => {
   try {
     const { question, documentId } = req.body;
+    const userId = req.user.id; // ✅ logged-in user's ID
 
     if (!question || !documentId) {
       console.warn("⚠️ Missing question or documentId in request");
@@ -62,8 +63,9 @@ export const chatHandler = async (req, res) => {
     }
 
     console.log("🔹 Received chat request:");
+    console.log("   User ID:", userId);
     console.log("   Question:", question);
-    console.log("   Document ID:", documentId, "| Type:", typeof documentId);
+    console.log("   Document ID:", documentId);
 
     console.log("🟡 Creating embedding for question...");
     const questionVector = await generateEmbedding(question);
@@ -72,9 +74,6 @@ export const chatHandler = async (req, res) => {
     await ensureCollection();
 
     console.log("🟡 Performing initial vector search in Qdrant...");
-    console.log("   Using filter -> documentId:", String(documentId));
-
-    // 1️⃣ Perform semantic vector search
     const searchResult = await qdrantClient.search(COLLECTION_NAME, {
       vector: questionVector,
       limit: 15,
@@ -90,32 +89,19 @@ export const chatHandler = async (req, res) => {
       return res.json({ answer: "No relevant information found in this document." });
     }
 
-    // 2️⃣ Semantic re-ranking
+    // Re-ranking
     const scoredResults = searchResult
-      .map((r) => ({
-        ...r,
-        relevance: 1 - r.score,
-      }))
+      .map((r) => ({ ...r, relevance: 1 - r.score }))
       .sort((a, b) => b.relevance - a.relevance)
       .slice(0, 5);
 
-    console.log(`🧠 Semantic re-ranking applied. Using top ${scoredResults.length} chunks for context.`);
+    console.log(`🧠 Semantic re-ranking applied. Using top ${scoredResults.length} chunks.`);
 
-    // Log top 3 hits
-    scoredResults.slice(0, 3).forEach((hit, index) => {
-      console.log(`   🔸 Semantic Match [${index + 1}]:`, {
-        id: hit.id,
-        score: hit.score,
-        similarity: hit.relevance.toFixed(4),
-        textSnippet: hit.payload.text?.slice(0, 100) + "...",
-      });
-    });
-
-    // 3️⃣ Build enriched context
     const contextText = scoredResults.map((r) => r.payload.text).join("\n\n");
 
     console.log("🟢 Building prompt for Gemini model...");
     const llm = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
     const prompt = `
 Use ONLY the information from the following document context to answer the question.
 If the context does not contain the answer, state that you cannot answer based on the provided document.
@@ -129,7 +115,7 @@ ${question}
 Answer:
 `;
 
-    console.log("🟡 Sending prompt to Gemini for answer generation...");
+    console.log("🟡 Sending prompt to Gemini...");
     const response = await llm.generateContent(prompt);
 
     const answer =
@@ -138,24 +124,37 @@ Answer:
         : response.response.text;
 
     console.log("✨ Gemini Answer Generated:");
-    console.log("────────────────────────────────────────────");
     console.log(answer);
-    console.log("────────────────────────────────────────────");
 
-    console.log("✅ Gemini response received. Storing in Prisma...");
-   await prisma.chat.create({
-data: {
-    question,
-    answer,
-    user: { connect: { id: req.user.userId } },
-    document: { connect: { id: Number(documentId) } }, // direct link
-  },
-});
+    // ✅ Save chat linked with the logged-in user
+    await prisma.chat.create({
+      data: {
+        question,
+        answer,
+        user: { connect: { id: userId } },
+        document: { connect: { id: Number(documentId) } },
+      },
+    });
 
     console.log("💾 Chat entry saved successfully in Prisma.");
     return res.json({ answer });
   } catch (err) {
     console.error("❌ Error in chatHandler:", err);
     return res.status(500).json({ error: "Server error during chat processing" });
+  }
+};
+
+// 🗂️ Get chat history for logged-in user
+export const getUserChatHistory = async (req, res) => {
+  try {
+    const userId = req.user.id; // ✅ Logged-in user's ID
+    const chats = await prisma.chat.findMany({
+      where: { userId },
+      orderBy: { createdAt: "asc" },
+    });
+    res.json(chats);
+  } catch (error) {
+    console.error("❌ Error fetching user chat history:", error);
+    res.status(500).json({ error: "Failed to fetch chat history" });
   }
 };

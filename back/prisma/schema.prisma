@@ -20,11 +20,11 @@ model User {
 model Document {
   id        Int      @id @default(autoincrement())
   filename  String
-  country   String
+  country   String?
   createdAt DateTime @default(now())
 
-  chats     Chat[]
-  chunks    DocumentChunk[]
+  chats  Chat[]
+  chunks DocumentChunk[]
 }
 
 model DocumentChunk {
@@ -34,7 +34,7 @@ model DocumentChunk {
   text       String
   createdAt  DateTime @default(now())
 
-  document   Document @relation(fields: [documentId], references: [id])
+  document Document @relation(fields: [documentId], references: [id])
 }
 
 model Chat {
