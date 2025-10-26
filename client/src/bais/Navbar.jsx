@@ -7,8 +7,8 @@ import { User, LogOut, Menu as MenuIcon, X } from "lucide-react";
 import logo from "/chatbot.png";
 
 const navigationItems = [
-  { name: "Chat", id: "chat", path: "/chat" },
-  { name: "ContactUs", id: "contact", path: "/contact" },
+  { name: "Chat", id: "chat", path: "/" },
+  { name: "ContactMe", id: "contact", path: "/contact" },
 ];
 
 export default function Navbar() {
@@ -27,12 +27,12 @@ export default function Navbar() {
   const itemRefs = useRef({});
   const pillRef = useRef(null);
   const dropdownRef = useRef(null);
-  const mobileMenuRef = useRef(null); // Ref for mobile dropdown
+  const mobileMenuRef = useRef(null);
 
-  // GSAP indicator only runs on desktop
+  // Desktop pill animation
   useLayoutEffect(() => {
     const updateIndicator = () => {
-      if (window.innerWidth < 768) return; // skip for mobile
+      if (window.innerWidth < 768) return; 
       const activeElement = itemRefs.current[activeItem];
       const indicatorElement = indicatorRef.current;
       const pillElement = pillRef.current;
@@ -89,7 +89,7 @@ export default function Navbar() {
     navigate("/login");
   };
 
-  // GSAP animation for mobile menu open/close
+  // Mobile menu animation
   React.useEffect(() => {
     if (mobileMenuRef.current) {
       if (mobileMenuOpen) {
@@ -114,17 +114,12 @@ export default function Navbar() {
     : null;
 
   return (
-   <nav className="fixed top-0 left-0 w-full p-4 z-50 shadow-md lg:shadow-none bg-white lg:bg-transparent">
-
+    <nav className="fixed top-0 left-0 w-full p-4 z-50 shadow-md lg:shadow-none bg-white lg:bg-transparent">
       <div className="relative flex items-center justify-between">
         {/* Mobile Hamburger */}
         <div className="md:hidden order-1">
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <MenuIcon className="w-6 h-6" />
-            )}
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
           </button>
         </div>
 
@@ -135,7 +130,7 @@ export default function Navbar() {
 
         {/* Desktop Navigation Pill */}
         <div className="hidden md:flex relative flex-1 justify-center px-4 order-3">
-          <div ref={pillRef} className="relative flex p-1 bg-white  rounded-full shadow-md">
+          <div ref={pillRef} className="relative flex p-1 bg-white rounded-full shadow-md">
             <div
               ref={indicatorRef}
               className="absolute bg-blue-500 rounded-full pointer-events-none z-0"
@@ -147,9 +142,7 @@ export default function Navbar() {
                 ref={(el) => (itemRefs.current[item.id] = el)}
                 onClick={() => handleItemClick(item.id, item.path)}
                 className={`relative px-6 py-2 text-sm font-medium transition-colors duration-300 z-10 ${
-                  activeItem === item.id
-                    ? "text-black"
-                    : "text-gray-600 hover:text-gray-800"
+                  activeItem === item.id ? "text-black" : "text-gray-600 hover:text-gray-800"
                 }`}
               >
                 {item.name}
@@ -186,9 +179,9 @@ export default function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="hidden sm:inline bg-black text-white rounded-full px-6 py-2 font-medium shadow-lg hover:bg-gray-800 transition-colors duration-300"
+              className="hidden md:flex bg-black text-white rounded-full px-4 py-2 font-medium shadow-lg hover:bg-gray-800 transition-colors duration-300 items-center gap-1"
             >
-              Login
+              <User className="w-5 h-5" /> Login
             </Link>
           )}
         </div>
@@ -213,6 +206,16 @@ export default function Navbar() {
             {item.name}
           </button>
         ))}
+
+        {/* Mobile Login button if user not logged in */}
+        {!user && (
+          <Link
+            to="/login"
+            className="w-full text-left px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors"
+          >
+            Login
+          </Link>
+        )}
       </div>
     </nav>
   );

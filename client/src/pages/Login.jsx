@@ -89,7 +89,7 @@ export default function Login() {
     if (success) {
       // ✅ Corrected: pass object with userData + token to AuthContext
       login({ userData: data.user, token: data.token });
-      navigate("/chat"); // redirect to home/dashboard
+      navigate("/"); 
     } else {
       setError(loginError);
     }
